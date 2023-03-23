@@ -1,0 +1,11 @@
+[package]
+name = "universal_operator"
+version = "2.0.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+kiss3d = "0.35.0"
+nalgebra = "0.30.0"
+rand = "0.8.4"
