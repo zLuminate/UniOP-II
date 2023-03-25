@@ -1,76 +1,43 @@
 mod universe {
-    pub struct Body {
-        pub position: (f32, f32, f32),
-        velocity: (f32, f32, f32),
-        pub mass: f32
-    }
+    use octree::Octree;
+    use std::time::Instant;
 
     pub struct Universe {
-        pub celestial_bodies: Vec<Body>
+        pub positions: Vec<[f64;3]>,
+        pub masses: Vec<f32>,
+        pub velocities: Vec<[f64;3]>
     }
 
     impl Universe {
         pub fn setup(&mut self) {
             for _ in 0..1000 {
-                let x = (rand::random::<f32>()-0.5) * 2.0;
-                let y = (rand::random::<f32>()-0.5) * 2.0;
-                let z = (rand::random::<f32>()-0.5) * 2.0;
-
-                let body = Body {
-                    position: (x, y, z),
-                    velocity: (0.0, 0.0, 0.0),
-                    mass: 1.0 // rand::random::<f32>() * 4.0
-                };
-
-                self.celestial_bodies.push(body);
+                let x = (rand::random::<f64>()-0.5) * 2.0;
+                let y = (rand::random::<f64>()-0.5) * 2.0;
+                let z = (rand::random::<f64>()-0.5) * 2.0;
+                self.new_body(1.0, [x,y,z], [0.0,0.0,0.0])
             }
-
-            // self.celestial_bodies.push(Body {
-            //     position: (0.0, 0.0, 0.0),
-            //     velocity: (0.0, 0.0, 0.0),
-            //     mass: 1000.0
-            // });
         }
 
-        fn duplicate_celestial_bodies(&self) -> Vec<Body> {
-            let mut bodies = Vec::new();
-            for body in self.celestial_bodies.iter() {
-                bodies.push(Body {
-                    position: body.position.clone(),
-                    velocity: body.velocity.clone(),
-                    mass: body.mass.clone()
-                });
-            }
-            bodies
+        fn new_body(&mut self, mass: f32, position: [f64; 3], initial_velocity: [f64; 3]) {
+            self.masses.push(mass);
+            self.positions.push(position);
+            self.velocities.push(initial_velocity);
         }
 
-        pub fn update(&mut self) {
-            let mut other_bodies = self.duplicate_celestial_bodies();
+        pub fn update(&self) {
+            let start_time = Instant::now();
 
-            for i in 0..self.celestial_bodies.len() {
-                other_bodies.remove(0);
+            let mut tree = Octree::new(self.positions.clone());
+            tree.build(10);
 
-                for other_body in other_bodies.iter() {
-                    let x = self.celestial_bodies[i].position.0 - other_body.position.0;
-                    let y = self.celestial_bodies[i].position.1 - other_body.position.1;
-                    let z = self.celestial_bodies[i].position.2 - other_body.position.2;
-
-                    let distance = (x*x + y*y + z*z).sqrt();
-                    let force = 6.67408e-11 * self.celestial_bodies[i].mass * other_body.mass / (distance * distance);
-
-                    let force_x = force * x / distance;
-                    let force_y = force * y / distance;
-                    let force_z = force * z / distance;
-
-                    self.celestial_bodies[i].velocity.0 -= force_x;
-                    self.celestial_bodies[i].velocity.1 -= force_y;
-                    self.celestial_bodies[i].velocity.2 -= force_z;
-
-                    self.celestial_bodies[i].position.0 += self.celestial_bodies[i].velocity.0;
-                    self.celestial_bodies[i].position.1 += self.celestial_bodies[i].velocity.1;
-                    self.celestial_bodies[i].position.2 += self.celestial_bodies[i].velocity.2;
-                }
+            for x in 0..999 {
+                println!("{}", self.positions[x][0]==tree.points[x][0]);
             }
+
+            let end_time = Instant::now();
+            println!("Time taken: {}ms", (end_time - start_time).as_millis());
+
+            std::process::exit(0);
         }
     }
 }
@@ -97,7 +64,11 @@ mod renderer {
         let mut window = Window::new("Universal Operator v2.0.0");
         window.set_light(Light::StickToCamera);
 
-        let mut universe = universe::Universe { celestial_bodies: Vec::new() };
+        let mut universe = universe::Universe {
+            positions: Vec::new(),
+            masses: Vec::new(),
+            velocities: Vec::new()
+        };
         universe.setup();
 
         while !window.should_close() {
@@ -140,9 +111,9 @@ mod renderer {
 
             universe.update();
 
-            for body in universe.celestial_bodies.iter() {
+            for body in universe.positions.iter() {
                 window.draw_point(
-                    &Point3::new(body.position.0, body.position.1, body.position.2),
+                    &Point3::new(body[0] as f32, body[1] as f32, body[2] as f32),
                     &Point3::new(1.0, 1.0, 1.0),
                 );
             }
