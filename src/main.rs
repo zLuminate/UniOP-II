@@ -2,7 +2,7 @@ mod universe {
     pub struct Body {
         pub position: (f32, f32, f32),
         velocity: (f32, f32, f32),
-        mass: f32
+        pub mass: f32
     }
 
     pub struct Universe {
@@ -11,7 +11,7 @@ mod universe {
 
     impl Universe {
         pub fn setup(&mut self) {
-            for _ in 0..1300 {
+            for _ in 0..1000 {
                 let x = (rand::random::<f32>()-0.5) * 2.0;
                 let y = (rand::random::<f32>()-0.5) * 2.0;
                 let z = (rand::random::<f32>()-0.5) * 2.0;
@@ -69,13 +69,6 @@ mod universe {
                     self.celestial_bodies[i].position.0 += self.celestial_bodies[i].velocity.0;
                     self.celestial_bodies[i].position.1 += self.celestial_bodies[i].velocity.1;
                     self.celestial_bodies[i].position.2 += self.celestial_bodies[i].velocity.2;
-
-                    // if i == 0 {
-                    //     println!("{}", force);
-                    //     println!("{}", distance);
-                    //     println!("{} {} {}", force_x, force_y, force_z);
-                    //     std::process::exit(0);
-                    // }
                 }
             }
         }
@@ -108,9 +101,6 @@ mod renderer {
         universe.setup();
 
         while !window.should_close() {
-            // let curr_yaw = arc_ball.yaw();
-            // arc_ball.set_yaw(curr_yaw + 0.05);
-
             {
                 for event in window.events().iter() {
                     match event.value {
