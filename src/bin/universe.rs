@@ -11,6 +11,8 @@ pub struct Octree {
     pub b_count: i32,
     pub octants: Vec<(i8, Octree)>, // (octant_index, octree object)
     pub children: Vec<Body>,
+    pub center_of_mass: [f32; 3],
+    pub total_mass: f32
 }
 
 impl Octree {
@@ -18,11 +20,21 @@ impl Octree {
 
         let b_count = bodies.len() as i32;
 
+        let center_of_mass: [f32; 3] = [
+            bodies.iter().map(|body| body.position[0]*body.mass).sum::<f32>() / b_count as f32,
+            bodies.iter().map(|body| body.position[1]*body.mass).sum::<f32>() / b_count as f32,
+            bodies.iter().map(|body| body.position[2]*body.mass).sum::<f32>() / b_count as f32
+        ];
+
+        let total_mass: f32 = bodies.iter().map(|body| body.mass).sum::<f32>();
+
         if b_count <= max_per_octant {
             return Octree {
                 b_count: b_count,
                 octants: Vec::new(),
-                children: bodies
+                children: bodies,
+                center_of_mass: center_of_mass,
+                total_mass: total_mass
             };
         }
 
@@ -82,7 +94,9 @@ impl Octree {
                 (6, Octree::new(sorted[6].1.clone(), max_per_octant)),
                 (7, Octree::new(sorted[7].1.clone(), max_per_octant))
             ]),
-            children: bodies
+            children: bodies,
+            center_of_mass: center_of_mass,
+            total_mass: total_mass
         };
 
         octree
@@ -111,12 +125,14 @@ impl Universe {
     }
 
     pub fn update(&self) {
-        let start_time = Instant::now();
+        for _ in 0..30{
+            let start_time = Instant::now();
 
-        let _octree = Octree::new(self.bodies.clone(), 5);
+            let _octree = Octree::new(self.bodies.clone(), 5);
 
-        let end_time = Instant::now();
-        println!("Time taken: {}ms", (end_time - start_time).as_millis());
+            let end_time = Instant::now();
+            println!("Time taken: {}ms", (end_time - start_time).as_millis());
+        }
 
         std::process::exit(0);
     }
